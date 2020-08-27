@@ -78,42 +78,39 @@ namespace TextEditer31072 {
             update = "";
 
             if(fileName == "") {
-                this.Text = "無題" + update;
+                this.Text = "無題" + update + "：テキストエディタ";
             } else {
-                this.Text = fileName.Remove(0, fileName.LastIndexOf("\\") + 1) + update;
+                this.Text = fileName.Remove(0, fileName.LastIndexOf("\\") + 1) + update + "：テキストエディタ";
             }
         }
 
         //保存をするかしないかのメッセージボックス
         private int SaveMessageBox(object sender, EventArgs e) {
 
-            //文章が更新していれば保存する
+            //文章が更新していればメッセージボックスを表示する
+            //0だったら呼び出し後の処理を実行、1だったら呼び出し後の処理は実行されない。
             if(update == "*") {
-                //0だったら呼び出し後の処理を実行、1だったら呼び出し後の処理は実行されない。
-                if(rtbTextArea.Text != "") {
-                    DialogResult result = MessageBox.Show("保存しますか？",
-                                            "確認",
-                                            MessageBoxButtons.YesNoCancel,
-                                            MessageBoxIcon.Exclamation,
-                                            MessageBoxDefaultButton.Button2);
+                DialogResult result = MessageBox.Show("保存しますか？",
+                                        "確認",
+                                        MessageBoxButtons.YesNoCancel,
+                                        MessageBoxIcon.Exclamation,
+                                        MessageBoxDefaultButton.Button2);
 
-                    if(result == DialogResult.Yes) {
-                        SaveToolStripMenuItem_Click(sender, e);
-                        return 0;
-                    } else if(result == DialogResult.No) {
-                        //処理を実行
-                        return 0;
-                    } else if(result == DialogResult.Cancel) {
-                        return 1;
-                    } else {
-                        return 1;
-                    }
-                } else {
+                if(result == DialogResult.Yes) {
+                    SaveToolStripMenuItem_Click(sender, e);
                     return 0;
+                } else if(result == DialogResult.No) {
+                    //呼び出し後の処理を実行
+                    return 0;
+                } else if(result == DialogResult.Cancel) {
+                    return 1;
+                } else {
+                    return 1;
                 }
             } else {
                 return 0;
             }
+
 
 
         }
@@ -146,7 +143,7 @@ namespace TextEditer31072 {
         private void rtbTextArea_TextChanged(object sender, EventArgs e) {
             if(update == "") {
                 update = "*";
-                this.Text += update;
+                this.Text = update + this.Text;
             }
         }
 
@@ -194,6 +191,7 @@ namespace TextEditer31072 {
                 e.Cancel = true;
             }
         }
+
 
         //編集メニュー
         private void EditToolStripMenuItem_Click(object sender, EventArgs e) {
