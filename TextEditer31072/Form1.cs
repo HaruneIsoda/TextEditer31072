@@ -13,6 +13,7 @@ namespace TextEditer31072 {
     public partial class Form1 : Form {
 
         private string fileName = "";
+        private string update = "";
 
         public Form1() {
             InitializeComponent();
@@ -25,9 +26,6 @@ namespace TextEditer31072 {
 
         //終了メニュー
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e) {
-            //if(SaveMessageBox(sender, e) == 1) {
-            //    return;
-            //}
             Application.Exit();
         }
 
@@ -39,9 +37,8 @@ namespace TextEditer31072 {
             }
 
             if(ofdFileOpen.ShowDialog() == DialogResult.OK) {
-                using(StreamReader sr = new StreamReader(ofdFileOpen.FileName, Encoding.GetEncoding("utf-8"), false)) {
-                    rtbTextArea.Text = sr.ReadToEnd();
-                }
+                rtbTextArea.LoadFile(ofdFileOpen.FileName, RichTextBoxStreamType.RichText);
+
                 fileName = ofdFileOpen.FileName;
                 FormTextChange();
             }
@@ -50,12 +47,10 @@ namespace TextEditer31072 {
 
         //保存
         private void FileSave(string filename) {
-            using(StreamWriter sw = new StreamWriter(filename, false, Encoding.GetEncoding("utf-8"))) {
-                sw.WriteLine(rtbTextArea.Text);
 
-                fileName = sfdFileSave.FileName;
-                
-            }
+            rtbTextArea.SaveFile(filename, RichTextBoxStreamType.RichText);
+            fileName = sfdFileSave.FileName;
+
         }
 
         //名前を付けて保存メニュー
@@ -80,45 +75,59 @@ namespace TextEditer31072 {
 
         //ファイル名表示
         private void FormTextChange() {
-            this.Text = fileName + "：テキストエディタ";
+            update = "";
+
+            if(fileName == "") {
+                this.Text = "無題" + update;
+            } else {
+                this.Text = fileName.Remove(0, fileName.LastIndexOf("\\") + 1) + update;
+            }
         }
 
         //保存をするかしないかのメッセージボックス
         private int SaveMessageBox(object sender, EventArgs e) {
 
-            //0だったら呼び出し後の処理を実行、1だったら呼び出し後の処理は実行されない。
-            if(rtbTextArea.Text != "") {
-                DialogResult result = MessageBox.Show("保存しますか？",
-                                        "確認",
-                                        MessageBoxButtons.YesNoCancel,
-                                        MessageBoxIcon.Exclamation,
-                                        MessageBoxDefaultButton.Button2);
+            //文章が更新していれば保存する
+            if(update == "*") {
+                //0だったら呼び出し後の処理を実行、1だったら呼び出し後の処理は実行されない。
+                if(rtbTextArea.Text != "") {
+                    DialogResult result = MessageBox.Show("保存しますか？",
+                                            "確認",
+                                            MessageBoxButtons.YesNoCancel,
+                                            MessageBoxIcon.Exclamation,
+                                            MessageBoxDefaultButton.Button2);
 
-                if(result == DialogResult.Yes) {
-                    SaveToolStripMenuItem_Click(sender, e);
-                    return 0;
-                } else if(result == DialogResult.No) {
-                    //処理を実行
-                    return 0;
-                } else if(result == DialogResult.Cancel) {
-                    return 1;
+                    if(result == DialogResult.Yes) {
+                        SaveToolStripMenuItem_Click(sender, e);
+                        return 0;
+                    } else if(result == DialogResult.No) {
+                        //処理を実行
+                        return 0;
+                    } else if(result == DialogResult.Cancel) {
+                        return 1;
+                    } else {
+                        return 1;
+                    }
                 } else {
-                    return 1;
+                    return 0;
                 }
             } else {
                 return 0;
             }
+
+
         }
 
         //新規作成メニュー
         private void NewToolStripMenuItem_Click(object sender, EventArgs e) {
-            
+
             if(SaveMessageBox(sender, e) == 1) {
                 return;
             }
-            
+
             fileName = "";
             rtbTextArea.Text = "";
+            FormTextChange();
 
         }
 
@@ -135,7 +144,10 @@ namespace TextEditer31072 {
 
         //テキストを変更したときの処理
         private void rtbTextArea_TextChanged(object sender, EventArgs e) {
-
+            if(update == "") {
+                update = "*";
+                this.Text += update;
+            }
         }
 
 
