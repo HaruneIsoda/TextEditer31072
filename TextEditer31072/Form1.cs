@@ -20,16 +20,23 @@ namespace TextEditer31072 {
 
         //フォームロード
         private void Form1_Load(object sender, EventArgs e) {
-            EditEnabledTrueOrFalse();
+            FormTextChange();
         }
 
         //終了メニュー
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e) {
+            //if(SaveMessageBox(sender, e) == 1) {
+            //    return;
+            //}
             Application.Exit();
         }
 
         //開くメニュー
         private void OpenToolStripMenuItem_Click(object sender, EventArgs e) {
+
+            if(SaveMessageBox(sender, e) == 1) {
+                return;
+            }
 
             if(ofdFileOpen.ShowDialog() == DialogResult.OK) {
                 using(StreamReader sr = new StreamReader(ofdFileOpen.FileName, Encoding.GetEncoding("utf-8"), false)) {
@@ -41,13 +48,13 @@ namespace TextEditer31072 {
 
         }
 
-        //名前を付けて保存
+        //保存
         private void FileSave(string filename) {
             using(StreamWriter sw = new StreamWriter(filename, false, Encoding.GetEncoding("utf-8"))) {
                 sw.WriteLine(rtbTextArea.Text);
 
                 fileName = sfdFileSave.FileName;
-                FormTextChange();
+                
             }
         }
 
@@ -55,6 +62,7 @@ namespace TextEditer31072 {
         private void SaveNameToolStripMenuItem_Click(object sender, EventArgs e) {
             if(sfdFileSave.ShowDialog() == DialogResult.OK) {
                 FileSave(sfdFileSave.FileName);
+                FormTextChange();
             }
         }
 
@@ -62,19 +70,24 @@ namespace TextEditer31072 {
         private void SaveToolStripMenuItem_Click(object sender, EventArgs e) {
             if(fileName != "") {
                 FileSave(fileName);
+                FormTextChange();
             } else {
                 SaveNameToolStripMenuItem_Click(sender, e);
+                FormTextChange();
             }
         }
+
 
         //ファイル名表示
         private void FormTextChange() {
             this.Text = fileName + "：テキストエディタ";
         }
 
-        //新規作成メニュー
-        private void NewToolStripMenuItem_Click(object sender, EventArgs e) {
-            if(fileName == "" && rtbTextArea.Text != "") {
+        //保存をするかしないかのメッセージボックス
+        private int SaveMessageBox(object sender, EventArgs e) {
+
+            //0だったら呼び出し後の処理を実行、1だったら呼び出し後の処理は実行されない。
+            if(rtbTextArea.Text != "") {
                 DialogResult result = MessageBox.Show("保存しますか？",
                                         "確認",
                                         MessageBoxButtons.YesNoCancel,
@@ -82,19 +95,33 @@ namespace TextEditer31072 {
                                         MessageBoxDefaultButton.Button2);
 
                 if(result == DialogResult.Yes) {
-                    SaveNameToolStripMenuItem_Click(sender, e);
+                    SaveToolStripMenuItem_Click(sender, e);
+                    return 0;
                 } else if(result == DialogResult.No) {
-                    fileName = "";
-                    rtbTextArea.Text = "";
+                    //処理を実行
+                    return 0;
                 } else if(result == DialogResult.Cancel) {
-                    return;
+                    return 1;
+                } else {
+                    return 1;
                 }
             } else {
-                fileName = "";
-                rtbTextArea.Text = "";
+                return 0;
             }
+        }
+
+        //新規作成メニュー
+        private void NewToolStripMenuItem_Click(object sender, EventArgs e) {
+            
+            if(SaveMessageBox(sender, e) == 1) {
+                return;
+            }
+            
+            fileName = "";
+            rtbTextArea.Text = "";
 
         }
+
 
         //元に戻すメニュー
         private void UndoToolStripMenuItem_Click(object sender, EventArgs e) {
@@ -106,32 +133,63 @@ namespace TextEditer31072 {
             rtbTextArea.Redo();
         }
 
-        //編集メニューのコントロール可否
-        private void EditEnabledTrueOrFalse() {
-
-            if(rtbTextArea.CanUndo == false) {  //元に戻す
-                UndoToolStripMenuItem.Enabled = false;
-            } else {
-                UndoToolStripMenuItem.Enabled = true;
-            }
-
-            if(rtbTextArea.CanRedo == false) {  //やり直し
-                RedoToolStripMenuItem.Enabled = false;
-            } else {
-                RedoToolStripMenuItem.Enabled = true;
-            }
+        //テキストを変更したときの処理
+        private void rtbTextArea_TextChanged(object sender, EventArgs e) {
 
         }
+
 
         //切り取りメニュー
         private void TearingOffToolStripMenuItem_Click(object sender, EventArgs e) {
+            rtbTextArea.Cut();
 
         }
 
-        //テキストを変更したときの処理
-        private void rtbTextArea_TextChanged(object sender, EventArgs e) {
-            //元に戻す、やり直しのマスク判定
-            EditEnabledTrueOrFalse();
+        //コピーメニュー
+        private void CopyToolStripMenuItem_Click(object sender, EventArgs e) {
+            rtbTextArea.Copy();
+        }
+
+        //貼り付けメニュー
+        private void PastingToolStripMenuItem_Click(object sender, EventArgs e) {
+            rtbTextArea.Paste();
+        }
+
+        //削除メニュー
+        private void DeleteToolStripMenuItem_Click(object sender, EventArgs e) {
+            rtbTextArea.SelectedText = "";
+        }
+
+
+        //色メニュー
+        private void ColorToolStripMenuItem_Click(object sender, EventArgs e) {
+            if(cdColor.ShowDialog() == DialogResult.OK) {
+                rtbTextArea.SelectionColor = cdColor.Color;
+            }
+
+        }
+
+        //フォントメニュー
+        private void FontToolStripMenuItem_Click(object sender, EventArgs e) {
+            if(fdFont.ShowDialog() == DialogResult.OK) {
+                rtbTextArea.SelectionFont = fdFont.Font;
+            }
+        }
+
+        //閉じるボタンを押したときの処理
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e) {
+            if(SaveMessageBox(sender, e) == 1) {
+                e.Cancel = true;
+            }
+        }
+
+        //編集メニュー
+        private void EditToolStripMenuItem_Click(object sender, EventArgs e) {
+            UndoToolStripMenuItem.Enabled = rtbTextArea.CanUndo ? true : false;
+            RedoToolStripMenuItem.Enabled = rtbTextArea.CanRedo ? true : false;
+            TearingOffToolStripMenuItem.Enabled = rtbTextArea.SelectionLength > 0 ? true : false;
+            CopyToolStripMenuItem.Enabled = rtbTextArea.SelectionLength > 0 ? true : false;
+            PastingToolStripMenuItem.Enabled = Clipboard.GetDataObject().GetDataPresent(DataFormats.Rtf);
         }
     }
 }
